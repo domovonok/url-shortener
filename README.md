@@ -2,9 +2,9 @@
 
 TODO:
 
-- [x] Add base functionality
-- [ ] Add tests
-- [ ] Add metrics
-- [ ] Add Redis
-- [ ] Add CI/CD
-- [ ] Add docs
+- [x] Base functionality
+- [ ] Tests
+- [ ] Metrics
+- [ ] Redis
+- [ ] CI/CD
+- [ ] Docs
