@@ -16,7 +16,7 @@ func MustInit(cfg config.DBConfig, log logger.Logger) *pgxpool.Pool {
 
 	poolConfig, err := pgxpool.ParseConfig(connString)
 	if err != nil {
-		log.Error("invalid connection string: %w", logger.Error(err))
+		log.Fatal("invalid connection string: %w", logger.Error(err))
 	}
 
 	poolConfig.MaxConnLifetime = cfg.Pool.MaxConnLifetime
