@@ -6,10 +6,43 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    image: gomicro/goose:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: [ .env ]
+    environment:
+      POSTGRES_HOST: postgres
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}"
+    volumes:
+      - ./migrations:/migrations:ro
+    entrypoint: [ "goose", "-dir", "/migrations" ]
+    command: [ "up" ]
+
+  url-shortener:
+    build: .
+    container_name: url-shortener
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    env_file: [ .env ]
+    environment:
+      POSTGRES_HOST: postgres
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${PORT:-8080}:8080"
+    command: [ "./app" ]
 
 volumes:
   pgdata:
