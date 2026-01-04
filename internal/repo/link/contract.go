@@ -3,8 +3,9 @@ package link
 import (
 	"context"
 
-	"github.com/domovonok/url-shortener/internal/model"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/domovonok/url-shortener/internal/model"
 )
 
 type dbPool interface {

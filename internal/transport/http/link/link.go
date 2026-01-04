@@ -5,10 +5,11 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/domovonok/url-shortener/internal/logger"
 	"github.com/domovonok/url-shortener/internal/model"
 	"github.com/domovonok/url-shortener/internal/transport/http/dto/link"
-	"github.com/go-chi/chi/v5"
 )
 
 type Controller struct {

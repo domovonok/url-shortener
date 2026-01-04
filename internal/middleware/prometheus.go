@@ -5,8 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/domovonok/url-shortener/internal/metrics"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/domovonok/url-shortener/internal/metrics"
 )
 
 func Prometheus(m *metrics.PrometheusMetrics) func(http.Handler) http.Handler {

@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+
 	"github.com/domovonok/url-shortener/internal/config"
 	"github.com/domovonok/url-shortener/internal/logger"
-	"github.com/redis/go-redis/v9"
 )
 
 type RedisCache struct {

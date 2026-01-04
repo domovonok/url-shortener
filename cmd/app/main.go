@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/domovonok/url-shortener/internal/cache"
 	"github.com/domovonok/url-shortener/internal/config"
 	"github.com/domovonok/url-shortener/internal/database"
@@ -19,7 +21,6 @@ import (
 	linkHandler "github.com/domovonok/url-shortener/internal/transport/http/link"
 	linkCreateUsecase "github.com/domovonok/url-shortener/internal/usecase/link/create"
 	linkGetUsecase "github.com/domovonok/url-shortener/internal/usecase/link/get"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -31,7 +32,12 @@ func main() {
 	}
 
 	log := logger.NewZapLogger(zapLogger)
-	defer log.Sync()
+	defer func(log *logger.ZapLogger) {
+		err := log.Sync()
+		if err != nil {
+			log.Error("Unable to sync logger", logger.Error(err))
+		}
+	}(log)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -41,7 +47,12 @@ func main() {
 	repo := linkRepo.New(dbPool)
 
 	dbCache := cache.MustInit(cfg.Cache, log)
-	defer dbCache.Close()
+	defer func(dbCache *cache.RedisCache) {
+		err := dbCache.Close()
+		if err != nil {
+			log.Error("Unable to close cache", logger.Error(err))
+		}
+	}(dbCache)
 
 	cacheRepo := linkRepo.NewCached(repo, dbCache, log)
 

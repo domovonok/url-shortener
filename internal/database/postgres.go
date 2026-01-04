@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/domovonok/url-shortener/internal/config"
 	"github.com/domovonok/url-shortener/internal/logger"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func MustInit(cfg config.DBConfig, log logger.Logger) *pgxpool.Pool {

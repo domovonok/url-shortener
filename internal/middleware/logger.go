@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/domovonok/url-shortener/internal/logger"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/domovonok/url-shortener/internal/logger"
 )
 
 func Logger(log logger.Logger) func(next http.Handler) http.Handler {

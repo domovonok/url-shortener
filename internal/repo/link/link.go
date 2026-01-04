@@ -6,9 +6,10 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
+
 	"github.com/domovonok/url-shortener/internal/model"
 	"github.com/domovonok/url-shortener/internal/repo/link/codec"
-	"github.com/jackc/pgx/v5"
 )
 
 const tableLinks = "links"
