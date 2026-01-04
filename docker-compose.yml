@@ -10,11 +10,8 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+    networks:
+      - backend
 
   redis:
     image: redis:7-alpine
@@ -23,43 +20,84 @@ services:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redisdata:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+    networks:
+      - backend
 
   migrate:
     image: gomicro/goose:latest
     depends_on:
-      postgres:
-        condition: service_healthy
-    env_file: [ .env ]
+      - postgres
+    env_file: [.env]
     environment:
       POSTGRES_HOST: postgres
       GOOSE_DRIVER: postgres
       GOOSE_DBSTRING: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}"
     volumes:
       - ./migrations:/migrations:ro
-    entrypoint: [ "goose", "-dir", "/migrations" ]
-    command: [ "up" ]
+    entrypoint: ["goose", "-dir", "/migrations"]
+    command: ["up"]
+    networks:
+      - backend
 
   url-shortener:
     build: .
     container_name: url-shortener
     depends_on:
-      migrate:
-        condition: service_completed_successfully
-      redis:
-        condition: service_healthy
-    env_file: [ .env ]
+      - migrate
+      - redis
+    env_file: [.env]
     environment:
       POSTGRES_HOST: postgres
       REDIS_HOST: redis
     ports:
       - "${PORT:-8080}:8080"
-    command: [ "./app" ]
+    command: ["./app"]
+    networks:
+      - backend
+      - monitoring
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - url-shortener
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+    restart: unless-stopped
 
 volumes:
   pgdata:
   redisdata:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  backend:
+    driver: bridge
+  monitoring:
+    driver: bridge

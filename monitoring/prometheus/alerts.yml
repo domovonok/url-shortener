@@ -1,0 +1,78 @@
+groups:
+  - name: url-shortener-alerts
+    interval: 10s
+    rules:
+      # Алерт при высокой частоте ошибок
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status_code=~"5.."}[1m]))
+            /
+            sum(rate(http_requests_total[1m]))
+          ) > 0.1
+        for: 30s
+        labels:
+          severity: warning
+          service: url-shortener
+        annotations:
+          summary: "Высокая частота ошибок в приложении"
+          description: "Более 10% запросов возвращают ошибки 5xx (текущее значение: {{ $value | humanizePercentage }})"
+
+      # Алерт при медленных запросах
+      - alert: SlowRequests
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket[1m])) by (le, url)
+          ) > 1.0
+        for: 1m
+        labels:
+          severity: warning
+          service: url-shortener
+        annotations:
+          summary: "Медленные HTTP запросы"
+          description: "95-й перцентиль времени ответа превышает 1 секунду для {{ $labels.url }} (текущее значение: {{ $value }}s)"
+
+      # Алерт при высоком использовании памяти приложением
+      - alert: HighApplicationMemory
+        expr: application_memory_usage_bytes > 100000000  # 100 MB
+        for: 2m
+        labels:
+          severity: warning
+          service: url-shortener
+        annotations:
+          summary: "Высокое использование памяти приложением"
+          description: "Приложение использует {{ $value | humanize }}B памяти (больше 100 MB)"
+
+      # Алерт при высоком использовании CPU
+      - alert: HighCPUUsage
+        expr: system_cpu_usage_percent > 80
+        for: 2m
+        labels:
+          severity: critical
+          service: url-shortener
+        annotations:
+          summary: "Высокая загрузка CPU"
+          description: "Использование CPU составляет {{ $value }}% (больше 80%)"
+
+      # Алерт если нет запросов (приложение не используется)
+      - alert: NoTraffic
+        expr: |
+          rate(http_requests_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: info
+          service: url-shortener
+        annotations:
+          summary: "Нет входящего трафика"
+          description: "Приложение не получало запросов последние 5 минут"
+
+      # Алерт если приложение недоступно
+      - alert: ServiceDown
+        expr: up{job="url-shortener-metrics"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: url-shortener
+        annotations:
+          summary: "Сервис недоступен"
+          description: "Приложение url-shortener-metrics недоступно для Prometheus"

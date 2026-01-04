@@ -13,6 +13,7 @@ import (
 	"github.com/domovonok/url-shortener/internal/config"
 	"github.com/domovonok/url-shortener/internal/database"
 	"github.com/domovonok/url-shortener/internal/logger"
+	"github.com/domovonok/url-shortener/internal/metrics"
 	linkRepo "github.com/domovonok/url-shortener/internal/repo/link"
 	"github.com/domovonok/url-shortener/internal/router"
 	linkHandler "github.com/domovonok/url-shortener/internal/transport/http/link"
@@ -32,6 +33,9 @@ func main() {
 	log := logger.NewZapLogger(zapLogger)
 	defer log.Sync()
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	dbPool := database.MustInit(cfg.DB, log)
 	defer dbPool.Close()
 	repo := linkRepo.New(dbPool)
@@ -42,6 +46,7 @@ func main() {
 	cacheRepo := linkRepo.NewCached(repo, dbCache, log)
 
 	startServer(
+		ctx,
 		linkHandler.New(
 			linkCreateUsecase.New(cacheRepo),
 			linkGetUsecase.New(cacheRepo),
@@ -52,13 +57,17 @@ func main() {
 }
 
 func startServer(
+	ctx context.Context,
 	linkHandler *linkHandler.Controller,
 	cfg config.ServerConfig,
 	log logger.Logger,
 ) {
+	prom := metrics.NewPrometheusMetrics()
+	metrics.StartSystemMetricsCollector(ctx, prom, cfg.MetricsPeriod)
+
 	srv := &http.Server{
 		Addr:    net.JoinHostPort("", cfg.Port),
-		Handler: router.New(linkHandler),
+		Handler: router.New(linkHandler, log, prom),
 	}
 
 	serverErr := make(chan error, 1)
@@ -69,15 +78,12 @@ func startServer(
 	}()
 	log.Info("Server listening on", logger.Any("addr", srv.Addr))
 
-	waitGracefulShutdown(srv, serverErr, cfg.GracefulShutdownTimeout, log)
+	waitGracefulShutdown(ctx, srv, serverErr, cfg.GracefulShutdownTimeout, log)
 
 	log.Info("Service stopped successfully")
 }
 
-func waitGracefulShutdown(srv *http.Server, serverErr <-chan error, timeout time.Duration, log logger.Logger) {
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
+func waitGracefulShutdown(ctx context.Context, srv *http.Server, serverErr <-chan error, timeout time.Duration, log logger.Logger) {
 	var reason string
 	select {
 	case <-ctx.Done():
@@ -85,6 +91,7 @@ func waitGracefulShutdown(srv *http.Server, serverErr <-chan error, timeout time
 	case err := <-serverErr:
 		reason = "server error: " + err.Error()
 	}
+
 	log.Info("Shutting down...", logger.Any("reason", reason))
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), timeout)
 	defer shutdownCancel()

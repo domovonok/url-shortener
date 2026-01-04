@@ -33,6 +33,7 @@ type DBConfig struct {
 type ServerConfig struct {
 	Port                    string
 	GracefulShutdownTimeout time.Duration
+	MetricsPeriod           time.Duration
 }
 
 type CacheConfig struct {
@@ -59,6 +60,7 @@ func Load() *Config {
 		Server: ServerConfig{
 			Port:                    getEnvAsString("PORT", "8080"),
 			GracefulShutdownTimeout: getEnvAsDuration("GRACEFUL_SHUTDOWN_TIMEOUT", 5*time.Second),
+			MetricsPeriod:           getEnvAsDuration("METRICS_PERIOD", 5*time.Second),
 		},
 		DB: DBConfig{
 			Host:     getEnvAsString("POSTGRES_HOST", "localhost"),
