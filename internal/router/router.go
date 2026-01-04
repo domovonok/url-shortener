@@ -15,8 +15,8 @@ func New(linkHandler LinkHandler, log logger.Logger, prom *metrics.PrometheusMet
 
 	r.Use(middleware.Prometheus(prom))
 	r.Use(middleware.Logger(log))
-
 	r.Handle("/metrics", promhttp.Handler())
+	r.Use(middleware.Recoverer(log))
 
 	r.Head("/healthcheck", common.Healthcheck)
 	r.Post("/", linkHandler.Create)
