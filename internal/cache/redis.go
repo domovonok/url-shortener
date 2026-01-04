@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"net"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -17,7 +18,7 @@ type RedisCache struct {
 
 func MustInit(cfg config.CacheConfig, log logger.Logger) *RedisCache {
 	opts := &redis.Options{
-		Addr:     cfg.Host + ":" + cfg.Port,
+		Addr:     net.JoinHostPort(cfg.Host, cfg.Port),
 		Username: cfg.Username,
 		Password: cfg.Password,
 		DB:       cfg.DB,
