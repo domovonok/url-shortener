@@ -15,7 +15,10 @@ func Prometheus(m *metrics.PrometheusMetrics) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			rw := newResponseWriter(w)
+			rw, ok := w.(*responseWriter)
+			if !ok {
+				rw = newResponseWriter(w)
+			}
 			next.ServeHTTP(rw, r)
 
 			duration := time.Since(start).Seconds()

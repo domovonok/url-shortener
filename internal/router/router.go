@@ -13,10 +13,10 @@ import (
 func New(linkHandler LinkHandler, log logger.Logger, prom *metrics.PrometheusMetrics) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(middleware.Prometheus(prom))
-	r.Use(middleware.Logger(log))
-	r.Handle("/metrics", promhttp.Handler())
 	r.Use(middleware.Recoverer(log))
+	r.Use(middleware.Logger(log))
+	r.Use(middleware.Prometheus(prom))
+	r.Handle("/metrics", promhttp.Handler())
 
 	r.Head("/healthcheck", common.Healthcheck)
 	r.Post("/", linkHandler.Create)
