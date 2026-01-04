@@ -32,12 +32,11 @@ func main() {
 	}
 
 	log := logger.NewZapLogger(zapLogger)
-	defer func(log *logger.ZapLogger) {
-		err := log.Sync()
-		if err != nil {
+	defer func() {
+		if err := log.Sync(); err != nil {
 			log.Error("Unable to sync logger", logger.Error(err))
 		}
-	}(log)
+	}()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -47,12 +46,11 @@ func main() {
 	repo := linkRepo.New(dbPool)
 
 	dbCache := cache.MustInit(cfg.Cache, log)
-	defer func(dbCache *cache.RedisCache) {
-		err := dbCache.Close()
-		if err != nil {
+	defer func() {
+		if err := dbCache.Close(); err != nil {
 			log.Error("Unable to close cache", logger.Error(err))
 		}
-	}(dbCache)
+	}()
 
 	cacheRepo := linkRepo.NewCached(repo, dbCache, log)
 
