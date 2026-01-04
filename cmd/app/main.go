@@ -9,8 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/domovonok/url-shortener/internal/cache"
 	"github.com/domovonok/url-shortener/internal/config"
 	"github.com/domovonok/url-shortener/internal/database"
@@ -26,12 +24,7 @@ import (
 func main() {
 	cfg := config.Load()
 
-	zapLogger, err := zap.NewProduction()
-	if err != nil {
-		panic(err)
-	}
-
-	log := logger.NewZapLogger(zapLogger)
+	log := logger.MustInit(cfg.Debug)
 	defer func() {
 		if err := log.Sync(); err != nil {
 			log.Error("Unable to sync logger", logger.Error(err))

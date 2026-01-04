@@ -49,6 +49,7 @@ type CacheConfig struct {
 }
 
 type Config struct {
+	Debug  bool
 	Server ServerConfig
 	DB     DBConfig
 	Cache  CacheConfig
@@ -57,6 +58,7 @@ type Config struct {
 func Load() *Config {
 	_ = godotenv.Load()
 	return &Config{
+		Debug: getEnvAsBool("DEBUG", false),
 		Server: ServerConfig{
 			Port:                    getEnvAsString("PORT", "8080"),
 			GracefulShutdownTimeout: getEnvAsDuration("GRACEFUL_SHUTDOWN_TIMEOUT", 5*time.Second),
@@ -122,4 +124,8 @@ func getEnvAsInt32(key string, defaultVal int32) int32 {
 
 func getEnvAsDuration(key string, defaultVal time.Duration) time.Duration {
 	return getEnvAs(key, defaultVal, time.ParseDuration)
+}
+
+func getEnvAsBool(key string, defaultVal bool) bool {
+	return getEnvAs[bool](key, defaultVal, strconv.ParseBool)
 }

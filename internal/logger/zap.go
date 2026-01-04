@@ -41,3 +41,13 @@ func toZapFields(fields []Field) []zap.Field {
 	}
 	return zapFields
 }
+
+func MustInit(debug bool) *ZapLogger {
+	var zapLogger *zap.Logger
+	if debug {
+		zapLogger = zap.Must(zap.NewDevelopment())
+	} else {
+		zapLogger = zap.Must(zap.NewProduction())
+	}
+	return &ZapLogger{logger: zapLogger}
+}
