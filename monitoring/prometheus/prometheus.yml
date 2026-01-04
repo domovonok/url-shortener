@@ -3,11 +3,11 @@ global:
   evaluation_interval: 15s
 
 rule_files:
-  - '/etc/prometheus/alerts.yml'
+  - "/etc/prometheus/alerts.yml"
 
 scrape_configs:
-  - job_name: 'url-shortener-metrics'
+  - job_name: "url-shortener-metrics"
     static_configs:
-      - targets: ['url-shortener:8080']
+      - targets: ["url-shortener:8080"]
         labels:
-          service: 'url-shortener-metrics'
+          service: "url-shortener-metrics"
