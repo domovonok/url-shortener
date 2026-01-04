@@ -67,6 +67,7 @@ func (r *Repo) Get(ctx context.Context, code string) (model.Link, error) {
 	if err := r.pool.QueryRow(ctx, query, args...).Scan(&res.Url, &res.CreatedAt); err != nil {
 		return model.Link{}, handleDBError(err)
 	}
+	res.Code = code
 
 	return res, nil
 }

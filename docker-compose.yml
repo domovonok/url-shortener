@@ -16,6 +16,19 @@ services:
       timeout: 3s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: my-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   migrate:
     image: gomicro/goose:latest
     depends_on:
@@ -37,12 +50,16 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     env_file: [ .env ]
     environment:
       POSTGRES_HOST: postgres
+      REDIS_HOST: redis
     ports:
       - "${PORT:-8080}:8080"
     command: [ "./app" ]
 
 volumes:
   pgdata:
+  redisdata:

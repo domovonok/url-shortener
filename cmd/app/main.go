@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/domovonok/url-shortener/internal/cache"
 	"github.com/domovonok/url-shortener/internal/config"
 	"github.com/domovonok/url-shortener/internal/database"
 	"github.com/domovonok/url-shortener/internal/logger"
@@ -17,7 +18,6 @@ import (
 	linkHandler "github.com/domovonok/url-shortener/internal/transport/http/link"
 	linkCreateUsecase "github.com/domovonok/url-shortener/internal/usecase/link/create"
 	linkGetUsecase "github.com/domovonok/url-shortener/internal/usecase/link/get"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
@@ -33,13 +33,18 @@ func main() {
 	defer log.Sync()
 
 	dbPool := database.MustInit(cfg.DB, log)
+	defer dbPool.Close()
 	repo := linkRepo.New(dbPool)
 
+	dbCache := cache.MustInit(cfg.Cache, log)
+	defer dbCache.Close()
+
+	cacheRepo := linkRepo.NewCached(repo, dbCache, log)
+
 	startServer(
-		dbPool,
 		linkHandler.New(
-			linkCreateUsecase.New(repo),
-			linkGetUsecase.New(repo),
+			linkCreateUsecase.New(cacheRepo),
+			linkGetUsecase.New(cacheRepo),
 			log),
 		cfg.Server,
 		log,
@@ -47,7 +52,6 @@ func main() {
 }
 
 func startServer(
-	dbPool *pgxpool.Pool,
 	linkHandler *linkHandler.Controller,
 	cfg config.ServerConfig,
 	log logger.Logger,
@@ -65,12 +69,12 @@ func startServer(
 	}()
 	log.Info("Server listening on", logger.Any("addr", srv.Addr))
 
-	waitGracefulShutdown(srv, dbPool, serverErr, cfg.GracefulShutdownTimeout, log)
+	waitGracefulShutdown(srv, serverErr, cfg.GracefulShutdownTimeout, log)
 
 	log.Info("Service stopped successfully")
 }
 
-func waitGracefulShutdown(srv *http.Server, dbPool *pgxpool.Pool, serverErr <-chan error, timeout time.Duration, log logger.Logger) {
+func waitGracefulShutdown(srv *http.Server, serverErr <-chan error, timeout time.Duration, log logger.Logger) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -90,8 +94,4 @@ func waitGracefulShutdown(srv *http.Server, dbPool *pgxpool.Pool, serverErr <-ch
 	} else {
 		log.Info("HTTP server stopped")
 	}
-
-	log.Info("Closing DB pool...")
-	dbPool.Close()
-	log.Info("DB pool closed")
 }

@@ -27,7 +27,7 @@ func MustInit(cfg config.DBConfig, log logger.Logger) *pgxpool.Pool {
 	poolConfig.MinIdleConns = cfg.Pool.MinIdleConns
 	poolConfig.HealthCheckPeriod = cfg.Pool.HealthCheckPeriod
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Pool.PingTimeout)
 	defer cancel()
 
 	dbPool, err := pgxpool.NewWithConfig(ctx, poolConfig)
@@ -47,7 +47,7 @@ func MustInit(cfg config.DBConfig, log logger.Logger) *pgxpool.Pool {
 			"Database ping attempt failed",
 			logger.Any("attempt", i),
 			logger.Any("max_retries", cfg.Pool.PingMaxRetries),
-			logger.Error(err),
+			logger.Error(pingErr),
 		)
 		if i < cfg.Pool.PingMaxRetries {
 			log.Warn(
@@ -59,6 +59,7 @@ func MustInit(cfg config.DBConfig, log logger.Logger) *pgxpool.Pool {
 	}
 
 	if pingErr != nil {
+		dbPool.Close()
 		log.Fatal("Unable to ping database")
 	}
 

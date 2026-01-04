@@ -36,6 +36,6 @@ docker compose run --rm migrate status
 - [x] Base functionality
 - [ ] Tests
 - [ ] Metrics
-- [ ] Redis
+- [x] Redis
 - [ ] CI/CD
 - [ ] Docs

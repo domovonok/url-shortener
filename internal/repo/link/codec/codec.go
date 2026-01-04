@@ -13,9 +13,6 @@ func EncodeIDToCode(id int64) string {
 }
 
 func DecodeCodeToID(code string) (int64, error) {
-	if len(code) != 11 {
-		return 0, errors.New("invalid code length")
-	}
 	decoded, err := base64.RawURLEncoding.DecodeString(code)
 	if err != nil {
 		return 0, err

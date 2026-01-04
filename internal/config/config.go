@@ -35,9 +35,22 @@ type ServerConfig struct {
 	GracefulShutdownTimeout time.Duration
 }
 
+type CacheConfig struct {
+	Host           string
+	Port           string
+	Username       string
+	Password       string
+	DB             int
+	PingTimeout    time.Duration
+	PingMaxRetries int
+	PingRetryDelay time.Duration
+	Ttl            time.Duration
+}
+
 type Config struct {
 	Server ServerConfig
 	DB     DBConfig
+	Cache  CacheConfig
 }
 
 func Load() *Config {
@@ -65,6 +78,17 @@ func Load() *Config {
 				PingRetryDelay:        getEnvAsDuration("POSTGRES_RETRY_DELAY", time.Second),
 				PingTimeout:           getEnvAsDuration("POSTGRES_AWAIT_TIME", 10*time.Second),
 			},
+		},
+		Cache: CacheConfig{
+			Host:           getEnvAsString("REDIS_HOST", "localhost"),
+			Port:           getEnvAsString("REDIS_PORT", "6379"),
+			Username:       getEnvAsString("REDIS_USERNAME", ""),
+			Password:       getEnvAsString("REDIS_PASSWORD", ""),
+			DB:             getEnvAsInt("REDIS_DB", 0),
+			PingTimeout:    getEnvAsDuration("REDIS_PING_TIMEOUT", 5*time.Second),
+			PingMaxRetries: getEnvAsInt("REDIS_PING_MAX_RETRIES", 3),
+			PingRetryDelay: getEnvAsDuration("REDIS_PING_RETRY_DELAY", time.Second),
+			Ttl:            getEnvAsDuration("CACHE_TTL", 10*time.Minute),
 		},
 	}
 }
