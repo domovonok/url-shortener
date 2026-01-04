@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	create_test "github.com/domovonok/url-shortener/internal/usecase/link/create/mocks"
-
 	"github.com/domovonok/url-shortener/internal/model"
 	"github.com/domovonok/url-shortener/internal/usecase/link/create"
 )
@@ -25,7 +23,7 @@ func TestCreate(t *testing.T) {
 		defer ctrl.Finish()
 
 		ctx := context.Background()
-		repo := create_test.NewMocklinkRepo(ctrl)
+		repo := NewMocklinkRepo(ctrl)
 		uc := create.New(repo)
 
 		url := "https://test.com/some/path/1"
@@ -51,7 +49,7 @@ func TestCreate(t *testing.T) {
 		defer ctrl.Finish()
 
 		ctx := context.Background()
-		repo := create_test.NewMocklinkRepo(ctrl)
+		repo := NewMocklinkRepo(ctrl)
 		uc := create.New(repo)
 
 		url := "https://test.com/some/path/1"

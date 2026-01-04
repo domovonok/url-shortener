@@ -1,4 +1,4 @@
-//go:generate mockgen -source ${GOFILE} -package ${GOPACKAGE}_test -destination mocks/contract_mock.go
+//go:generate mockgen -source ${GOFILE} -package ${GOPACKAGE}_test -destination mocks_test.go
 package get
 
 import (

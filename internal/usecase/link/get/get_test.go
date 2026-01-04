@@ -11,7 +11,6 @@ import (
 
 	"github.com/domovonok/url-shortener/internal/model"
 	"github.com/domovonok/url-shortener/internal/usecase/link/get"
-	get_test "github.com/domovonok/url-shortener/internal/usecase/link/get/mocks"
 )
 
 func TestGet(t *testing.T) {
@@ -24,7 +23,7 @@ func TestGet(t *testing.T) {
 		defer ctrl.Finish()
 
 		ctx := context.Background()
-		repo := get_test.NewMocklinkRepo(ctrl)
+		repo := NewMocklinkRepo(ctrl)
 		uc := get.New(repo)
 
 		code := "Code123"
@@ -50,7 +49,7 @@ func TestGet(t *testing.T) {
 		defer ctrl.Finish()
 
 		ctx := context.Background()
-		repo := get_test.NewMocklinkRepo(ctrl)
+		repo := NewMocklinkRepo(ctrl)
 		uc := get.New(repo)
 
 		code := "Code123"
