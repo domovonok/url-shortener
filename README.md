@@ -1,4 +1,4 @@
-# URL Shortener
+# Url Shortener
 
 ## Запуск
 
@@ -30,12 +30,3 @@ docker compose run --rm migrate reset
 # Статус миграций
 docker compose run --rm migrate status
 ```
-
-## TODO
-
-- [x] Base functionality
-- [ ] Tests
-- [x] Metrics
-- [x] Redis
-- [ ] CI/CD
-- [ ] Docs
