@@ -6,8 +6,14 @@ type ZapLogger struct {
 	logger *zap.Logger
 }
 
-func NewZapLogger(logger *zap.Logger) *ZapLogger {
-	return &ZapLogger{logger: logger}
+func MustInit(debug bool) *ZapLogger {
+	var zapLogger *zap.Logger
+	if debug {
+		zapLogger = zap.Must(zap.NewDevelopment())
+	} else {
+		zapLogger = zap.Must(zap.NewProduction())
+	}
+	return &ZapLogger{logger: zapLogger}
 }
 
 func (z *ZapLogger) Info(msg string, fields ...Field) {
@@ -40,14 +46,4 @@ func toZapFields(fields []Field) []zap.Field {
 		zapFields = append(zapFields, zap.Any(f.Key, f.Value))
 	}
 	return zapFields
-}
-
-func MustInit(debug bool) *ZapLogger {
-	var zapLogger *zap.Logger
-	if debug {
-		zapLogger = zap.Must(zap.NewDevelopment())
-	} else {
-		zapLogger = zap.Must(zap.NewProduction())
-	}
-	return &ZapLogger{logger: zapLogger}
 }
