@@ -19,7 +19,13 @@ func NewCached(r BaseRepo, c Cache, l logger.Logger) *CachedRepo {
 }
 
 func (cr *CachedRepo) Create(ctx context.Context, url string) (model.Link, error) {
-	return cr.r.Create(ctx, url)
+	res, err := cr.r.Create(ctx, url)
+	if err == nil {
+		if data, err := json.Marshal(res); err == nil {
+			_ = cr.c.Set(ctx, key(res.Code), data)
+		}
+	}
+	return res, err
 }
 
 func (cr *CachedRepo) Get(ctx context.Context, code string) (model.Link, error) {
