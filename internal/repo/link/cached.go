@@ -9,12 +9,12 @@ import (
 )
 
 type CachedRepo struct {
-	r   BaseRepo
-	c   Cache
+	r   baseRepo
+	c   cache
 	log logger.Logger
 }
 
-func NewCached(r BaseRepo, c Cache, l logger.Logger) *CachedRepo {
+func NewCached(r baseRepo, c cache, l logger.Logger) *CachedRepo {
 	return &CachedRepo{r: r, c: c, log: l}
 }
 

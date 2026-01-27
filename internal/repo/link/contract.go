@@ -12,12 +12,12 @@ type dbPool interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-type Cache interface {
+type cache interface {
 	Set(ctx context.Context, key string, value []byte) error
 	Get(ctx context.Context, key string) ([]byte, error)
 }
 
-type BaseRepo interface {
+type baseRepo interface {
 	Get(ctx context.Context, code string) (model.Link, error)
 	Create(ctx context.Context, url string) (model.Link, error)
 }

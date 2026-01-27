@@ -12,6 +12,7 @@ import (
 	"github.com/domovonok/url-shortener/internal/cache"
 	"github.com/domovonok/url-shortener/internal/config"
 	"github.com/domovonok/url-shortener/internal/database"
+	"github.com/domovonok/url-shortener/internal/limiter"
 	"github.com/domovonok/url-shortener/internal/logger"
 	"github.com/domovonok/url-shortener/internal/metrics"
 	linkRepo "github.com/domovonok/url-shortener/internal/repo/link"
@@ -47,12 +48,15 @@ func main() {
 
 	cacheRepo := linkRepo.NewCached(repo, dbCache, log)
 
+	rateLimiter := limiter.NewTokenBucket(cfg.RateLimit)
+
 	startServer(
 		ctx,
 		linkHandler.New(
 			linkCreateUsecase.New(cacheRepo),
 			linkGetUsecase.New(cacheRepo),
 			log),
+		rateLimiter,
 		cfg.Server,
 		log,
 	)
@@ -60,7 +64,8 @@ func main() {
 
 func startServer(
 	ctx context.Context,
-	linkHandler *linkHandler.Controller,
+	linkHandler router.LinkHandler,
+	rateLimiter router.TokenBucket,
 	cfg config.ServerConfig,
 	log logger.Logger,
 ) {
@@ -69,7 +74,7 @@ func startServer(
 
 	srv := &http.Server{
 		Addr:    net.JoinHostPort("", cfg.Port),
-		Handler: router.New(linkHandler, log, prom),
+		Handler: router.New(linkHandler, rateLimiter, log, prom),
 	}
 
 	serverErr := make(chan error, 1)

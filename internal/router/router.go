@@ -10,10 +10,11 @@ import (
 	"github.com/domovonok/url-shortener/internal/transport/http/common"
 )
 
-func New(linkHandler LinkHandler, log logger.Logger, prom *metrics.PrometheusMetrics) *chi.Mux {
+func New(linkHandler LinkHandler, tokenBucket TokenBucket, log logger.Logger, prom *metrics.PrometheusMetrics) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Recoverer(log))
+	r.Use(middleware.RateLimitMiddleware(tokenBucket, log, prom))
 	r.Use(middleware.Logger(log))
 	r.Use(middleware.Prometheus(prom))
 	r.Handle("/metrics", promhttp.Handler())

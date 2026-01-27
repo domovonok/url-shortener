@@ -48,11 +48,17 @@ type CacheConfig struct {
 	Ttl            time.Duration
 }
 
+type RateLimitConfig struct {
+	Capacity   int
+	RefillRate int
+}
+
 type Config struct {
-	Debug  bool
-	Server ServerConfig
-	DB     DBConfig
-	Cache  CacheConfig
+	Debug     bool
+	Server    ServerConfig
+	DB        DBConfig
+	Cache     CacheConfig
+	RateLimit RateLimitConfig
 }
 
 func Load() *Config {
@@ -93,6 +99,10 @@ func Load() *Config {
 			PingMaxRetries: getEnvAsInt("REDIS_PING_MAX_RETRIES", 3),
 			PingRetryDelay: getEnvAsDuration("REDIS_PING_RETRY_DELAY", time.Second),
 			Ttl:            getEnvAsDuration("CACHE_TTL", 10*time.Minute),
+		},
+		RateLimit: RateLimitConfig{
+			Capacity:   getEnvAsInt("RATE_LIMIT_CAPACITY", 100),
+			RefillRate: getEnvAsInt("RATE_LIMIT_REFILL_RATE", 10),
 		},
 	}
 }
