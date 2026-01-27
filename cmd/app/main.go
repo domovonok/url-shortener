@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -50,6 +51,9 @@ func main() {
 
 	rateLimiter := limiter.NewTokenBucket(cfg.RateLimit)
 
+	prom := metrics.NewPrometheusMetrics()
+	metrics.StartSystemMetricsCollector(ctx, prom, cfg.MetricsPeriod)
+
 	startServer(
 		ctx,
 		linkHandler.New(
@@ -57,6 +61,7 @@ func main() {
 			linkGetUsecase.New(cacheRepo),
 			log),
 		rateLimiter,
+		prom,
 		cfg.Server,
 		log,
 	)
@@ -66,31 +71,41 @@ func startServer(
 	ctx context.Context,
 	linkHandler router.LinkHandler,
 	rateLimiter router.TokenBucket,
+	prom *metrics.PrometheusMetrics,
 	cfg config.ServerConfig,
 	log logger.Logger,
 ) {
-	prom := metrics.NewPrometheusMetrics()
-	metrics.StartSystemMetricsCollector(ctx, prom, cfg.MetricsPeriod)
-
-	srv := &http.Server{
+	mainSrv := &http.Server{
 		Addr:    net.JoinHostPort("", cfg.Port),
 		Handler: router.New(linkHandler, rateLimiter, log, prom),
 	}
 
 	serverErr := make(chan error, 1)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := mainSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serverErr <- err
 		}
 	}()
-	log.Info("Server listening on", logger.Any("addr", srv.Addr))
+	log.Info("Server listening on", logger.Any("addr", mainSrv.Addr))
 
-	waitGracefulShutdown(ctx, srv, serverErr, cfg.GracefulShutdownTimeout, log)
+	pprofSrv := &http.Server{
+		Addr:    net.JoinHostPort("", cfg.PprofPort),
+		Handler: router.NewPprofRouter(),
+	}
+
+	go func() {
+		if err := pprofSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("Pprof server error", logger.Error(err))
+		}
+	}()
+	log.Info("Pprof server listening on", logger.Any("addr", pprofSrv.Addr))
+
+	waitGracefulShutdown(ctx, mainSrv, pprofSrv, serverErr, cfg.GracefulShutdownTimeout, log)
 
 	log.Info("Service stopped successfully")
 }
 
-func waitGracefulShutdown(ctx context.Context, srv *http.Server, serverErr <-chan error, timeout time.Duration, log logger.Logger) {
+func waitGracefulShutdown(ctx context.Context, mainSrv, pprofSrv *http.Server, serverErr <-chan error, timeout time.Duration, log logger.Logger) {
 	var reason string
 	select {
 	case <-ctx.Done():
@@ -100,12 +115,26 @@ func waitGracefulShutdown(ctx context.Context, srv *http.Server, serverErr <-cha
 	}
 
 	log.Info("Shutting down...", logger.Any("reason", reason))
+
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), timeout)
 	defer shutdownCancel()
 
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Error("HTTP server shutdown error", logger.Error(err))
-	} else {
-		log.Info("HTTP server stopped")
-	}
+	wg := new(sync.WaitGroup)
+
+	wg.Go(func() {
+		if err := pprofSrv.Shutdown(shutdownCtx); err != nil {
+			log.Error("Pprof server graceful shutdown failed", logger.Error(err))
+		} else {
+			log.Info("Pprof server stopped")
+		}
+	})
+	wg.Go(func() {
+		if err := mainSrv.Shutdown(shutdownCtx); err != nil {
+			log.Error("HTTP server shutdown error", logger.Error(err))
+		} else {
+			log.Info("HTTP server stopped")
+		}
+	})
+
+	wg.Wait()
 }

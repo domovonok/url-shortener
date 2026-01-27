@@ -32,8 +32,8 @@ type DBConfig struct {
 
 type ServerConfig struct {
 	Port                    string
+	PprofPort               string
 	GracefulShutdownTimeout time.Duration
-	MetricsPeriod           time.Duration
 }
 
 type CacheConfig struct {
@@ -54,11 +54,12 @@ type RateLimitConfig struct {
 }
 
 type Config struct {
-	Debug     bool
-	Server    ServerConfig
-	DB        DBConfig
-	Cache     CacheConfig
-	RateLimit RateLimitConfig
+	Debug         bool
+	Server        ServerConfig
+	DB            DBConfig
+	Cache         CacheConfig
+	RateLimit     RateLimitConfig
+	MetricsPeriod time.Duration
 }
 
 func Load() *Config {
@@ -67,8 +68,8 @@ func Load() *Config {
 		Debug: getEnvAsBool("DEBUG", false),
 		Server: ServerConfig{
 			Port:                    getEnvAsString("PORT", "8080"),
+			PprofPort:               getEnvAsString("PPROF_PORT", "6060"),
 			GracefulShutdownTimeout: getEnvAsDuration("GRACEFUL_SHUTDOWN_TIMEOUT", 5*time.Second),
-			MetricsPeriod:           getEnvAsDuration("METRICS_PERIOD", 5*time.Second),
 		},
 		DB: DBConfig{
 			Host:     getEnvAsString("POSTGRES_HOST", "localhost"),
@@ -104,6 +105,7 @@ func Load() *Config {
 			Capacity:   getEnvAsInt("RATE_LIMIT_CAPACITY", 100),
 			RefillRate: getEnvAsInt("RATE_LIMIT_REFILL_RATE", 10),
 		},
+		MetricsPeriod: getEnvAsDuration("METRICS_PERIOD", 5*time.Second),
 	}
 }
 

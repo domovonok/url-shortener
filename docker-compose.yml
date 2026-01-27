@@ -51,6 +51,7 @@ services:
       REDIS_HOST: redis
     ports:
       - "${PORT:-8080}:8080"
+      - "127.0.0.1:${PPROF_PORT:-6060}:${PPROF_PORT:-6060}"
     command: ["./app"]
     networks:
       - backend
