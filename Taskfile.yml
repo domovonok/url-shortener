@@ -1,0 +1,37 @@
+version: "3"
+
+tasks:
+  deps:
+    cmds:
+      - go mod download
+      - go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+      - go install go.uber.org/mock/mockgen@latest
+      - go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+
+  test:
+    cmds:
+      - go test ./...
+
+  mocks:
+    cmds:
+      - go generate ./...
+
+  sqlc:
+    cmds:
+      - sqlc generate
+
+  gen:
+    deps: [ mocks, sqlc ]
+
+  build:
+    cmds:
+      - mkdir -p bin
+      - go build -o bin/app ./cmd/app
+
+  run-inmemory:
+    cmds:
+      - STORAGE_TYPE=inmemory go run ./cmd/app
+
+  lint:
+    cmds:
+      - golangci-lint run

@@ -1,0 +1,44 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - revive
+    - misspell
+    - unconvert
+    - unused
+
+  settings:
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+
+  exclusions:
+    rules:
+      - path: ^vendor/
+        linters: [ all ]
+      - path: '.*\.gen\.go$'
+        linters: [ all ]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/domovonok/url-shortener
+
+  exclusions:
+    paths:
+      - ^vendor/
+      - '.*\.gen\.go$'
