@@ -23,19 +23,6 @@ func (q *Queries) Create(ctx context.Context, url string) (int64, error) {
 	return id, err
 }
 
-const getIDByURL = `-- name: GetIDByURL :one
-SELECT id
-FROM url
-WHERE url = $1
-`
-
-func (q *Queries) GetIDByURL(ctx context.Context, url string) (int64, error) {
-	row := q.db.QueryRow(ctx, getIDByURL, url)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
 const get = `-- name: Get :one
 SELECT url
 FROM url
@@ -47,4 +34,17 @@ func (q *Queries) Get(ctx context.Context, id int64) (string, error) {
 	var url string
 	err := row.Scan(&url)
 	return url, err
+}
+
+const getIDByURL = `-- name: GetIDByURL :one
+SELECT id
+FROM url
+WHERE url = $1
+`
+
+func (q *Queries) GetIDByURL(ctx context.Context, url string) (int64, error) {
+	row := q.db.QueryRow(ctx, getIDByURL, url)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
