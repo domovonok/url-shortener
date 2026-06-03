@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: url-shortener-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-user}
