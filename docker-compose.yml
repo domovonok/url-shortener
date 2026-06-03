@@ -25,8 +25,7 @@ services:
       postgres:
         condition: service_healthy
     env_file:
-#     FOR CI, change to .env
-      - .env.example
+      - .env
     environment:
       HTTP_ADDR: ":8080"
       STORAGE_TYPE: postgres
