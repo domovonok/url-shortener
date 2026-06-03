@@ -65,12 +65,10 @@ func main() {
 
 	handler := urlhandler.NewHandler(logger, service)
 
-	if err := runServer(ctx, &cfg.Server, logger, handler); err != nil {
-		logger.Fatal("service stopped with error", zap.Error(err))
-	}
+	runServer(ctx, &cfg.Server, logger, handler)
 }
 
-func runServer(ctx context.Context, cfg *config.ServerConfig, logger *zap.Logger, handler router.Handler) error {
+func runServer(ctx context.Context, cfg *config.ServerConfig, logger *zap.Logger, handler router.Handler) {
 	srv := &http.Server{
 		Addr:    cfg.Addr,
 		Handler: router.New(handler),
@@ -84,12 +82,9 @@ func runServer(ctx context.Context, cfg *config.ServerConfig, logger *zap.Logger
 	}()
 	logger.Info("Server listening on", zap.String("addr", srv.Addr))
 
-	if err := waitGracefulShutdown(ctx, logger, srv, serverErr, cfg.GracefulShutdownTimeout); err != nil {
-		return err
-	}
+	waitGracefulShutdown(ctx, logger, srv, serverErr, cfg.GracefulShutdownTimeout)
 
 	logger.Info("Service stopped successfully")
-	return nil
 }
 
 func waitGracefulShutdown(
@@ -98,12 +93,13 @@ func waitGracefulShutdown(
 	srv *http.Server,
 	serverErr <-chan error,
 	timeout time.Duration,
-) error {
-	reason := "signal"
+) {
+	var reason string
 	select {
 	case <-ctx.Done():
+		reason = "signal"
 	case err := <-serverErr:
-		return err
+		reason = "server error: " + err.Error()
 	}
 
 	logger.Info("Shutting down...", zap.String("reason", reason))
@@ -116,5 +112,4 @@ func waitGracefulShutdown(
 	} else {
 		logger.Info("HTTP server stopped")
 	}
-	return nil
 }
