@@ -12,6 +12,7 @@ import (
 	xerrors "github.com/domovonok/url-shortener/internal/errors"
 )
 
+//go:generate mockgen -source=handler.go -destination=mocks/handler_mocks.go -package=mocks
 type service interface {
 	Create(ctx context.Context, url string) (string, error)
 	Get(ctx context.Context, url string) (string, error)
