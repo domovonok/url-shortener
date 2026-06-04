@@ -13,7 +13,7 @@ func validateURL(raw string) error {
 	if err != nil {
 		return errors.Join(xerrors.ErrInvalidUrl, err)
 	}
-	
+
 	scheme := strings.ToLower(parsed.Scheme)
 	if scheme != "http" && scheme != "https" || parsed.Hostname() == "" {
 		return xerrors.ErrInvalidUrl

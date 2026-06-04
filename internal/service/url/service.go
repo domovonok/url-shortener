@@ -7,6 +7,7 @@ import (
 	xerrors "github.com/domovonok/url-shortener/internal/errors"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/service_mocks.go -package=mocks
 type Repo interface {
 	Create(ctx context.Context, url string) (int64, error)
 	GetIDByURL(ctx context.Context, url string) (int64, error)
