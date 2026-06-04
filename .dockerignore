@@ -1,0 +1,15 @@
+.git
+.github
+.idea
+bin
+coverage.out
+*.test
+.env
+.env.*
+!.env.example
+Dockerfile*
+docker-compose*.yml
+Taskfile.yml
+README.md
+.golangci.yml
+sqlc.yml

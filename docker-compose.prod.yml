@@ -19,9 +19,8 @@ services:
       - backend
 
   url-shortener:
-    image: ${URL_SHORTENER_IMAGE:-ghcr.io/domovonok/url-shortener:local}
-    build:
-      context: .
+    image: ${URL_SHORTENER_IMAGE:-ghcr.io/domovonok/url-shortener:latest}
+    pull_policy: always
     container_name: url-shortener
     depends_on:
       postgres:

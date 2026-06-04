@@ -86,7 +86,7 @@ curl http://localhost:8080/aaaaaaaaab
 Приложение читает настройки из переменных окружения.
 
 Пример файла с описанием всех параметров находится в [.env.example](.env.example). Его можно использовать как шаблон для
-локального `.env`, который подключается в `docker-compose.yml`.
+локального `.env`; Docker Compose автоматически читает этот файл для подстановки переменных.
 
 Основные параметры:
 
@@ -103,6 +103,42 @@ curl http://localhost:8080/aaaaaaaaab
 ## Тестирование
 
 В проекте покрыты unit-тестами handler, service и in-memory repository.
+
+## Docker-образ
+
+Сервис распространяется как Docker-образ в GitHub Container Registry:
+
+```text
+ghcr.io/domovonok/url-shortener
+```
+
+Workflow [.github/workflows/docker.yml](.github/workflows/docker.yml) собирает образ и публикует его:
+
+- при push в `main`: теги `latest`, `main` и `sha-<commit>`;
+- при push тега `v*`: тег релиза, например `v1.0.0`.
+
+Запустить опубликованный образ с in-memory хранилищем:
+
+```bash
+docker pull ghcr.io/domovonok/url-shortener:latest
+
+docker run --rm -p 8080:8080 \
+  -e HTTP_ADDR=:8080 \
+  -e STORAGE_TYPE=inmemory \
+  ghcr.io/domovonok/url-shortener:latest
+```
+
+Запустить опубликованный образ вместе с PostgreSQL:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Использовать конкретную версию образа:
+
+```bash
+URL_SHORTENER_IMAGE=ghcr.io/domovonok/url-shortener:v1.0.0 docker compose -f docker-compose.prod.yml up -d
+```
 
 ## Запуск
 
@@ -140,13 +176,13 @@ curl -X POST http://localhost:8080/ \
 curl http://localhost:8080/aaaaaaaaab
 ```
 
-Запустить приложение вместе с PostgreSQL через Docker Compose:
+Локально собрать и запустить приложение вместе с PostgreSQL через Docker Compose:
 
 ```bash
 docker compose up --build
 ```
 
-В этом режиме `docker-compose.yml` использует `.env` для настройки контейнеров и запускает приложение с
+В этом режиме `docker-compose.yml` собирает локальный Docker-образ и запускает приложение с
 `STORAGE_TYPE=postgres`.
 
 ## Разработка
