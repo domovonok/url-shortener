@@ -20,7 +20,7 @@ func NewRepository(db urlsqlc.DBTX) *repo {
 
 func (r *repo) Create(ctx context.Context, url string) (int64, error) {
 	id, err := r.q.Create(ctx, url)
-	
+
 	if errors.Is(err, pgx.ErrNoRows) {
 		return 0, xerrors.ErrUrlExists
 	}
