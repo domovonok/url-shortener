@@ -20,9 +20,11 @@ func NewRepository(db urlsqlc.DBTX) *repo {
 
 func (r *repo) Create(ctx context.Context, url string) (int64, error) {
 	id, err := r.q.Create(ctx, url)
+	
 	if errors.Is(err, pgx.ErrNoRows) {
-		return r.q.GetIDByURL(ctx, url)
+		return 0, xerrors.ErrUrlExists
 	}
+
 	return id, err
 }
 
@@ -34,4 +36,14 @@ func (r *repo) Get(ctx context.Context, id int64) (string, error) {
 	}
 
 	return url, err
+}
+
+func (r *repo) GetIDByURL(ctx context.Context, url string) (int64, error) {
+	id, err := r.q.GetIDByURL(ctx, url)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, xerrors.ErrUrlNotFound
+	}
+
+	return id, err
 }

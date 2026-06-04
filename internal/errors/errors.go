@@ -7,4 +7,5 @@ var (
 	ErrInvalidUrl   = errors.New("invalid url")
 	ErrInvalidCode  = errors.New("invalid code")
 	ErrUrlNotFound  = errors.New("url not found")
+	ErrUrlExists    = errors.New("url already exists")
 )

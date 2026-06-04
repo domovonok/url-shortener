@@ -24,13 +24,25 @@ func (r *repo) Create(_ context.Context, url string) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if id, ok := r.urlToId[url]; ok {
-		return id, nil
+	if _, ok := r.urlToId[url]; ok {
+		return 0, errors.ErrUrlExists
 	}
 
 	id := int64(len(r.idToUrl) + 1)
 	r.idToUrl[id] = url
 	r.urlToId[url] = id
+
+	return id, nil
+}
+
+func (r *repo) GetIDByURL(_ context.Context, url string) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	id, ok := r.urlToId[url]
+	if !ok {
+		return 0, errors.ErrUrlNotFound
+	}
 
 	return id, nil
 }
