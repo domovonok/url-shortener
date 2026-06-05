@@ -23,7 +23,7 @@ type (
 	}
 
 	ServerConfig struct {
-		Addr                    string        `env:"HTTP_ADDR" envDefault:":8080"`
+		Port                    string        `env:"HTTP_PORT" envDefault:"8080"`
 		GracefulShutdownTimeout time.Duration `env:"GRACEFUL_SHUTDOWN_TIMEOUT" envDefault:"5s"`
 	}
 
@@ -41,6 +41,10 @@ type (
 		SSLMode  string `env:"POSTGRES_SSL_MODE" envDefault:"disable"`
 	}
 )
+
+func (c *ServerConfig) Addr() string {
+	return net.JoinHostPort("", c.Port)
+}
 
 func (c *PostgresConfig) DSN() string {
 	dsn := url.URL{

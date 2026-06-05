@@ -27,7 +27,6 @@ services:
         condition: service_healthy
     environment:
       DEBUG: "${DEBUG:-false}"
-      HTTP_ADDR: ":8080"
       GRACEFUL_SHUTDOWN_TIMEOUT: "${GRACEFUL_SHUTDOWN_TIMEOUT:-5s}"
       STORAGE_TYPE: postgres
       POSTGRES_HOST: postgres

@@ -70,7 +70,7 @@ func main() {
 
 func runServer(ctx context.Context, cfg *config.ServerConfig, logger *zap.Logger, handler router.Handler) {
 	srv := &http.Server{
-		Addr:    cfg.Addr,
+		Addr:    cfg.Addr(),
 		Handler: router.New(handler),
 	}
 

@@ -90,7 +90,7 @@ curl http://localhost:8080/aaaaaaaaab
 
 Основные параметры:
 
-- `HTTP_ADDR` - адрес, на котором запускается HTTP-сервер.
+- `HTTP_PORT` - порт HTTP-сервера; при запуске через Docker Compose - порт на хосте.
 - `GRACEFUL_SHUTDOWN_TIMEOUT` - таймаут graceful shutdown.
 - `STORAGE_TYPE` - тип хранилища: `inmemory` или `postgres`.
 - `POSTGRES_*` - параметры подключения к PostgreSQL.
@@ -123,7 +123,6 @@ Workflow [.github/workflows/docker.yml](.github/workflows/docker.yml) собир
 docker pull ghcr.io/domovonok/url-shortener:latest
 
 docker run --rm -p 8080:8080 \
-  -e HTTP_ADDR=:8080 \
   -e STORAGE_TYPE=inmemory \
   ghcr.io/domovonok/url-shortener:latest
 ```
